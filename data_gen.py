@@ -1,7 +1,7 @@
 import numpy as np
 
 class CosineData:
-    def __init__(self, ll, ul, mu, sig, noise_sig = 0.05, num=25):
+    def __init__(self, ll, ul, mu, sig, noise_sig = 0.05, num=24):
         #Sanity checks
         if ll>ul:
             print("The lower limit is larger than the upper limit.")

@@ -28,7 +28,8 @@ plt.plot(test_data_x, test_data_pred)
 plt.show()
 
 #Method 3
-#reg = DirectionBalancedKNN(X, y, 2)
+reg = WeightOptimizedKNN(X, y, 2, 0.0001)
+#reg.train()
 #test_data_pred = reg.predict(test_data_x)
 #plt.plot(test_data_x, test_data_pred)
 
