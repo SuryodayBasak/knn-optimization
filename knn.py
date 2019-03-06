@@ -102,11 +102,17 @@ def mean_sq_err(y, y_hat):
     mse = (1/len(y))*sum((y_hat[i] - y[i])**2 for i in range(len(y)))
     return mse
 
+def f_derivative(lam, x_c, x):
+    inf = influence(lam, x_c, x)
+    dw_dlam = ((1/lam)-x)*inf
+    return dw_dlam
+
 class WeightOptimizedKNN:
     def __init__(self, X, y, k, alpha=0.01):
         self.X = X
         self.y = y
         self.k = k
+        self.alpha = alpha
 
         self.n_samples = np.size(self.X, 0)
         self.neighbor_mat = np.zeros((self.n_samples, self.n_samples))
@@ -168,30 +174,67 @@ class WeightOptimizedKNN:
         print()
         print(self.r_lam)
         print()
-        print("Example of influence:")
+        #print("Example of influence:")
 
     def train(self):
-        #Initialize and populate all the variables required for the optimization
-        l_vals = np.zeros((self.n_samples, self.n_samples))
-        r_vals = np.zeros((self.n_samples, self.n_samples))
+        mse_old = 999.9
+        mse_new = 100.0
+        i_iter = 0.0
+        while (i_iter < 1000) and (mse_new < mse_old):
+        #while (i_iter < 100000):
+        #while mse_new < mse_old:
+            mse_old = mse_new
+            #Initialize and populate all the variables required for the optimization
+            l_vals = np.zeros((self.n_samples, self.n_samples))
+            r_vals = np.zeros((self.n_samples, self.n_samples))
 
-        for i in range(self.n_samples):
-            for j in range(self.n_samples):
-                l_vals[i,j] = influence(self.l_lam[j], self.X[j], self.X[i])
-                r_vals[i,j] = influence(self.r_lam[j], self.X[j], self.X[i])
+            for i in range(self.n_samples):
+                for j in range(self.n_samples):
+                    l_vals[i,j] = influence(self.l_lam[j], self.X[j], self.X[i])
+                    r_vals[i,j] = influence(self.r_lam[j], self.X[j], self.X[i])
 
-        #multiply l_vals with self.neighbor_mat_r because the right influences must optimize left distributions and vice versa
-        l_vals = np.multiply(l_vals, self.neighbor_mat_r)
-        r_vals = np.multiply(r_vals, self.neighbor_mat_l)
+            #multiply l_vals with self.neighbor_mat_r because the right influences must optimize left distributions and vice versa
+            l_vals = np.multiply(l_vals, self.neighbor_mat_r)
+            r_vals = np.multiply(r_vals, self.neighbor_mat_l)
         
-        #print("LEFT VALUES:")
-        #print(l_vals)
-        #print("RIGHT VALUES:")
-        #print(r_vals)
+            #print("LEFT VALUES:")
+            #print(l_vals)
+            #print("RIGHT VALUES:")
+            #print(r_vals)
 
-        y_hat = np.sum(l_vals+r_vals, axis=0)*(1/(2*self.k))
-        print(y_hat)
-        print("MSE = ", mean_sq_err(self.y, y_hat))
+            y_hat = np.sum(l_vals+r_vals, axis=0)*(1/(2*self.k))
+            #print(y_hat)
+            mse_new = mean_sq_err(self.y, y_hat)
+            print("MSE = ", mse_new)
+
+            err = self.y - y_hat
+            #print("Error:", err)
+
+            #print("Updating")
+
+            #Update left distribution
+            for j in range(self.n_samples):
+                influenced_idx = []
+                for i in range(self.n_samples):
+                    if l_vals[i,j] != 0.0:
+                        influenced_idx.append(i)
+                grad = 0.0
+                for idx in influenced_idx:
+                    grad = grad + err[idx]*f_derivative(self.l_lam[j], self.X[j], self.X[idx])
+                grad = grad/self.n_samples
+                self.l_lam[j] = self.l_lam[j] - (self.alpha*grad)
+
+            #Update right distribution
+            for j in range(self.n_samples):
+                influenced_idx = []
+                for i in range(self.n_samples):
+                    if r_vals[i,j] != 0.0:
+                        influenced_idx.append(i)
+                grad = 0.0
+                for idx in influenced_idx:
+                    grad = grad + err[idx]*f_derivative(self.r_lam[j], self.X[j], self.X[idx])
+                grad = grad/self.n_samples
+                self.r_lam[j] = self.r_lam[j] - (self.alpha*grad)
 
     def train_predict(self):
         y_hat = []

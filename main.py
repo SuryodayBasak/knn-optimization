@@ -29,7 +29,7 @@ plt.plot(test_data_x, test_data_pred)
 plt.show()
 
 #Method 3
-reg = WeightOptimizedKNN(X, y, 2, 0.0001)
+reg = WeightOptimizedKNN(X, y, 2, 0.001)
 reg.train()
 #reg.train_predict()
 #test_data_pred = reg.predict(test_data_x)
