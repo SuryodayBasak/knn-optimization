@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from data_gen import CosineData
 from knn import DirectionBalancedKNN, InvDistDirectionBalancedKNN, WeightOptimizedKNN
+np.set_printoptions(precision=2)
 
 data_obj = CosineData(0, np.pi/2 + 0.5,
             [0, np.pi/8, np.pi/4+0.1, np.pi/2+0.2, np.pi/2 + 1.5],
@@ -29,7 +30,8 @@ plt.show()
 
 #Method 3
 reg = WeightOptimizedKNN(X, y, 2, 0.0001)
-#reg.train()
+reg.train()
+#reg.train_predict()
 #test_data_pred = reg.predict(test_data_x)
 #plt.plot(test_data_x, test_data_pred)
 
