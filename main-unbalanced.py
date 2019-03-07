@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from data_gen import CosineData
-from knn import DirectionBalancedKNN, InvDistDirectionBalancedKNN, WeightOptimizedKNN
+from knn import KNNRegressor, DKNNRegressor, ExpKNNRegressor
 np.set_printoptions(precision=2)
 
 data_obj = CosineData(0, np.pi/2 + 0.5,
@@ -17,21 +17,31 @@ test_data_y = np.cos(test_data_x)
 plt.plot(test_data_x, test_data_y)
 
 #Method 1
-reg = DirectionBalancedKNN(X, y, 2)
+reg = KNNRegressor(X, y, 5)
 test_data_pred = reg.predict(test_data_x)
 plt.plot(test_data_x, test_data_pred)
 
 #Method 2
-reg = InvDistDirectionBalancedKNN(X, y, 2)
+reg = DKNNRegressor(X, y, 5)
+test_data_pred = reg.predict(test_data_x)
+plt.plot(test_data_x, test_data_pred)
+
+#Method 3
+reg = ExpKNNRegressor(X, y, 5)
+test_data_pred = reg.predict(test_data_x)
+plt.plot(test_data_x, test_data_pred)
+
+plt.show()
+"""
+#Method 3
+reg = WeightOptimizedKNN(X, y, 1, 0.01)
+reg.train()
 test_data_pred = reg.predict(test_data_x)
 plt.plot(test_data_x, test_data_pred)
 
 plt.show()
 
-#Method 3
-reg = WeightOptimizedKNN(X, y, 2, 0.001)
-reg.train()
 #reg.train_predict()
 #test_data_pred = reg.predict(test_data_x)
 #plt.plot(test_data_x, test_data_pred)
-
+"""

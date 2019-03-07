@@ -1,6 +1,6 @@
 import numpy as np
 
-class KNNRegressor:
+class DirectionBalancedKNN:
     def __init__(self, X, y, k):
         self.X = X
         self.y = y
@@ -9,23 +9,42 @@ class KNNRegressor:
     def predict(self, X_test):
         y_pred = []
         for x in X_test:
-            nbrs_dist = []
+            x_l = []
+            y_l = []
+            x_r = []
+            y_r = []
+            d_l = []
+            d_r = []
 
             for i in range(len(self.X)):
-                nbrs_dist.append(np.sqrt((x-self.X[i])**2)) #Euclidean dist
+                if (self.X[i] < x):
+                    x_l.append(self.X[i])
+                    y_l.append(self.y[i])
+                    d_l.append(np.sqrt((x-self.X[i])**2)) #Euclidean dist
 
-            sorted_dist_idx = np.argsort(nbrs_dist)
-            k_idx = sorted_dist_idx[:self.k]
+                else:
+                    x_r.append(self.X[i])
+                    y_r.append(self.y[i])
+                    d_r.append(np.sqrt((x-self.X[i])**2)) #Euclidean dist
+
+            sorted_l_idx = np.argsort(d_l)
+            sorted_r_idx = np.argsort(d_r)
+
+            l_idx = sorted_l_idx[:self.k]
+            r_idx = sorted_r_idx[:self.k]
 
             y = 0.0
-            for j in k_idx:
-                y += self.y[j]
+            for j in l_idx:
+                y += y_l[j]
 
-            y = y/(self.k)
+            for j in r_idx:
+                y += y_r[j]
+
+            y = y/(self.k*2)
             y_pred.append(y)
         return y_pred
 
-class DKNNRegressor:
+class InvDistDirectionBalancedKNN:
     def __init__(self, X, y, k):
         self.X = X
         self.y = y
@@ -34,46 +53,42 @@ class DKNNRegressor:
     def predict(self, X_test):
         y_pred = []
         for x in X_test:
-            nbrs_dist = []
+            x_l = []
+            y_l = []
+            x_r = []
+            y_r = []
+            d_l = []
+            d_r = []
 
             for i in range(len(self.X)):
-                nbrs_dist.append(np.sqrt((x-self.X[i])**2)) #Euclidean dist
+                if (self.X[i] < x):
+                    x_l.append(self.X[i])
+                    y_l.append(self.y[i])
+                    d_l.append(np.sqrt((x-self.X[i])**2)) #Euclidean dist
 
-            sorted_dist_idx = np.argsort(nbrs_dist)
-            k_idx = sorted_dist_idx[:self.k]
+                else:
+                    x_r.append(self.X[i])
+                    y_r.append(self.y[i])
+                    d_r.append(np.sqrt((x-self.X[i])**2)) #Euclidean dist
 
-            y = 0.0
-            w = 0.0
-            for j in k_idx:
-                y += (1/nbrs_dist[j])*self.y[j]
-                w += 1/nbrs_dist[j]
-            y = y/w
-            y_pred.append(y)
-        return y_pred
+            sorted_l_idx = np.argsort(d_l)
+            sorted_r_idx = np.argsort(d_r)
 
-class ExpKNNRegressor:
-    def __init__(self, X, y, k):
-        self.X = X
-        self.y = y
-        self.k = k
-
-    def predict(self, X_test):
-        y_pred = []
-        for x in X_test:
-            nbrs_dist = []
-
-            for i in range(len(self.X)):
-                nbrs_dist.append(np.sqrt((x-self.X[i])**2)) #Euclidean dist
-
-            sorted_dist_idx = np.argsort(nbrs_dist)
-            k_idx = sorted_dist_idx[:self.k]
+            l_idx = sorted_l_idx[:self.k]
+            r_idx = sorted_r_idx[:self.k]
 
             y = 0.0
-            w = 0.0
-            for j in k_idx:
-                y += np.e**(-nbrs_dist[j])*self.y[j]
-                w += np.e**(-nbrs_dist[j])
-            y = y/w
+            w_sum = 0.0
+
+            for j in l_idx:
+                y += (1/d_l[j])*y_l[j]
+                w_sum += (1/d_l[j])
+
+            for j in r_idx:
+                y += (1/d_r[j])*y_r[j]
+                w_sum += (1/d_r[j])
+
+            y = y/(w_sum)
             y_pred.append(y)
         return y_pred
 
