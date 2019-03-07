@@ -315,3 +315,38 @@ class AxWeightedDKNNRegressor(WeightedDKNNRegressor):
             y = y/w
             y_pred.append(y)
         return y_pred
+
+###############################################################################
+
+class BoxWeightedDKNNRegressor(WeightedDKNNRegressor):
+    def predict(self, X_test):
+        y_pred = []
+        for x in X_test:
+            nbrs_dist = []
+            r_i = 0.0
+            l_i = 0.0
+            e_i = 0.0
+            for i in range(len(self.X)):
+                nbrs_dist.append(np.sqrt((x-self.X[i])**2)) #Euclidean dist
+
+            sorted_dist_idx = np.argsort(nbrs_dist)
+            k_idx = sorted_dist_idx[:self.k]
+
+            y = 0.0
+            w = 0.0
+            for j in k_idx:
+                if self.X[j] < x:
+                    y += (self.weights[j]/nbrs_dist[j])*self.y[j]
+                    w += (self.weights[j]/nbrs_dist[j])
+
+                elif self.X[j] > x:
+                    y += (self.weights[j]/nbrs_dist[j])*self.y[j]
+                    w += (self.weights[j]/nbrs_dist[j])
+
+                else:
+                    y += 2*(self.weights[j]/nbrs_dist[j])*self.y[j]
+                    w += 2*(self.weights[j]/nbrs_dist[j])
+
+            y = y/w
+            y_pred.append(y)
+        return y_pred

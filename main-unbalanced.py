@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from data_gen import CosineData
 from knn import KNNRegressor, DKNNRegressor, ExpKNNRegressor
-from knn import WeightedExpKNNRegressor, WeightedDKNNRegressor, AxWeightedDKNNRegressor
+from knn import WeightedExpKNNRegressor, WeightedDKNNRegressor, AxWeightedDKNNRegressor, BoxWeightedDKNNRegressor
 np.set_printoptions(precision=2)
 
 data_obj = CosineData(0, np.pi/2 + 0.5,
@@ -17,12 +17,10 @@ test_data_y = np.cos(test_data_x)
 
 plt.plot(test_data_x, test_data_y)
 
-"""
 #Method 1
 reg = KNNRegressor(X, y, 5)
 test_data_pred = reg.predict(test_data_x)
 plt.plot(test_data_x, test_data_pred, label='KNN Regressor')
-"""
 
 #Method 2
 reg = DKNNRegressor(X, y, 5)
@@ -49,10 +47,17 @@ test_data_pred = reg.predict(test_data_x)
 plt.plot(test_data_x, test_data_pred, label='Weighted DKNN Regressor')
 
 #Method 6
-reg = WeightedDKNNRegressor(X, y, 5, 10, 100, 10)
+reg = AxWeightedDKNNRegressor(X, y, 5, 10, 100, 10)
 reg.train()
 test_data_pred = reg.predict(test_data_x)
 plt.plot(test_data_x, test_data_pred, label='Axis Bal WDKNN Regressor')
+
+
+#Method 7
+reg = BoxWeightedDKNNRegressor(X, y, 5, 10, 100, 10)
+reg.train()
+test_data_pred = reg.predict(test_data_x)
+plt.plot(test_data_x, test_data_pred, label='Box WDKNN Regressor')
 
 plt.legend()
 plt.show()
