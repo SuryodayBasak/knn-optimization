@@ -180,7 +180,7 @@ class WeightedExpKNNRegressor:
 
 ###############################################################################
 
-class WeightedDKNNRegressor:
+class WeightedDKNNRegressor():
     def __init__(self, X, y, k, n_init_parents, n_cross, n_best):
         self.X = X
         self.y = y
@@ -243,7 +243,7 @@ class WeightedDKNNRegressor:
     def train(self):
         self.create_initial_population()
 
-        for i in range(0, 200):
+        for i in range(0, 100):
             print("Currently in generation: ", i)
             self.crossover()
             self.select_children()
@@ -267,6 +267,51 @@ class WeightedDKNNRegressor:
             for j in k_idx:
                 y += (self.weights[j]/nbrs_dist[j])*self.y[j]
                 w += (self.weights[j]/nbrs_dist[j])
+            y = y/w
+            y_pred.append(y)
+        return y_pred
+
+###############################################################################
+
+class AxWeightedDKNNRegressor(WeightedDKNNRegressor):
+    def predict(self, X_test):
+        y_pred = []
+        for x in X_test:
+            nbrs_dist = []
+            r_i = 0.0
+            l_i = 0.0
+            e_i = 0.0
+            for i in range(len(self.X)):
+                nbrs_dist.append(np.sqrt((x-self.X[i])**2)) #Euclidean dist
+
+            sorted_dist_idx = np.argsort(nbrs_dist)
+            k_idx = sorted_dist_idx[:self.k]
+
+            for j in k_idx:
+                if self.X[j] < x:
+                    l_i += 1
+                elif self.X[j] > x:
+                    r_i += 1
+                else:
+                    e_i += 1
+
+            y = 0.0
+            w = 0.0
+            for j in k_idx:
+                if self.X[j] < x:
+                    ax_b = (l_i + r_i) / l_i
+                    y += ax_b*(self.weights[j]/nbrs_dist[j])*self.y[j]
+                    w += ax_b*(self.weights[j]/nbrs_dist[j])
+        
+                elif self.X[j] > x:
+                    ax_b = (l_i + r_i) / r_i
+                    y += ax_b*(self.weights[j]/nbrs_dist[j])*self.y[j]
+                    w += ax_b*(self.weights[j]/nbrs_dist[j])
+
+                else:
+                    y += (self.weights[j]/nbrs_dist[j])*self.y[j]
+                    w += (self.weights[j]/nbrs_dist[j])
+
             y = y/w
             y_pred.append(y)
         return y_pred
