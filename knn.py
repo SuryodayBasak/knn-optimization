@@ -271,6 +271,8 @@ class WeightedDKNNRegressor():
             y_pred.append(y)
         return y_pred
 
+    def get_weights(self):
+        return self.weights
 ###############################################################################
 
 class AxWeightedDKNNRegressor(WeightedDKNNRegressor):
@@ -350,3 +352,83 @@ class BoxWeightedDKNNRegressor(WeightedDKNNRegressor):
             y = y/w
             y_pred.append(y)
         return y_pred
+
+###############################################################################
+
+class AxKNNRegressor(KNNRegressor):
+
+    def predict(self, X_test):
+        y_pred = []
+        for x in X_test:
+            nbrs_dist = []
+            r_i = 0.0
+            l_i = 0.0
+            e_i = 0.0
+            for i in range(len(self.X)):
+                nbrs_dist.append(np.sqrt((x-self.X[i])**2)) #Euclidean dist
+
+            sorted_dist_idx = np.argsort(nbrs_dist)
+            k_idx = sorted_dist_idx[:self.k]
+
+            for j in k_idx:
+                if self.X[j] < x:
+                    l_i += 1
+                elif self.X[j] > x:
+                    r_i += 1
+                else:
+                    e_i += 1
+
+            y = 0.0
+            w = 0.0
+            for j in k_idx:
+                if self.X[j] < x:
+                    ax_b = (l_i + r_i) / l_i
+                    y += ax_b*self.y[j]
+                    w += ax_b
+
+                elif self.X[j] > x:
+                    ax_b = (l_i + r_i) / r_i
+                    y += ax_b*self.y[j]
+                    w += ax_b
+
+                else:
+                    y += self.y[j]
+                    w += 1
+            y = y/(w)
+            y_pred.append(y)
+        return y_pred
+
+###############################################################################
+
+class BoxKNNRegressor(KNNRegressor):
+
+    def predict(self, X_test):
+        y_pred = []
+        for x in X_test:
+            nbrs_dist = []
+
+            for i in range(len(self.X)):
+                nbrs_dist.append(np.sqrt((x-self.X[i])**2)) #Euclidean dist
+
+            sorted_dist_idx = np.argsort(nbrs_dist)
+            k_idx = sorted_dist_idx[:self.k]
+
+            y = 0.0
+            w = 0.0
+            for j in k_idx:
+                if self.X[j] < x:
+                    y += self.y[j]
+                    w += 1
+
+                elif self.X[j] > x:
+                    y += self.y[j]
+                    w += 1
+
+                else:
+                    y += 2*self.y[j]
+                    w += 2
+
+            y = y/w
+            y_pred.append(y)
+        return y_pred
+
